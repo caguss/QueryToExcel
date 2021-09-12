@@ -65,20 +65,25 @@ namespace QueryToExcel
             switch (keyData)
             {
                 case Keys.Control | Keys.S:
-                    btn_Save_Click(null, null);
+                    btn_Save.PerformClick();
+                    //btn_Save_Click(null, null);
                     return true;
                 case Keys.Control | Keys.O:
-                    btn_OpenQuery_Click(null, null);
+                    btn_OpenQuery.PerformClick();
+                    //btn_OpenQuery_Click(null, null);
                     return true;
                 case Keys.F5:
                 case Keys.F9:
-                    btn_Excute_Click(null, null);
+                    btn_Excute.PerformClick();
+                    //btn_Excute_Click(null, null);
                     return true;
                 case Keys.Control | Keys.P:
-                    btn_Setting_Click(null, null);
+                    //btn_Setting_Click(null, null);
+                    btn_Setting.PerformClick();
                     return true;
                 case Keys.Control | Keys.Shift | Keys.S:
-                    btn_QuerySave_Click(null, null);
+                    //btn_QuerySave_Click(null, null);
+                    btn_QuerySave.PerformClick();
                     return true;
                 case Keys.F1:
                     Helpbtn(null, new CancelEventArgs());
@@ -141,6 +146,7 @@ namespace QueryToExcel
                         }));
                         SqlDataAdapter adpt = new SqlDataAdapter(txt_Query.Text, conn);
                         adpt.Fill(Result);
+                        adpt.Dispose();
                     }
                     int totalRowCount = 0;
                     double eachpercent = 70 / Result.Tables.Count;
@@ -226,6 +232,7 @@ namespace QueryToExcel
                         }));
                         MySqlDataAdapter adpt = new MySqlDataAdapter(txt_Query.Text, conn);
                         adpt.Fill(Result);
+                        adpt.Dispose();
                     }
 
                     int totalRowCount = 0;
@@ -286,6 +293,7 @@ namespace QueryToExcel
         private async void btn_Save_Click(object sender, EventArgs e)
         {
             btn_Save.Enabled = false;
+            btn_Excute.Enabled = false;
 
             if (Convert.ToInt32(lbl_RowCount.Text) <= 0)
             {
@@ -308,6 +316,8 @@ namespace QueryToExcel
                 }));
                 await Saving(saveFileDialog.FileName);
             }
+            btn_Save.Enabled = true;
+            btn_Excute.Enabled = true;
         }
 
         private async Task Saving(string filename)
@@ -318,31 +328,69 @@ namespace QueryToExcel
                 DirectoryInfo di = new DirectoryInfo(filepath);
                 di.Create();
             }
-            filepath += Path.GetFileName(filename);
+            ;
             await Task.Run(() =>
             {
+               
+                int num = 1;
                 Microsoft.Office.Interop.Excel.Application ap = new Microsoft.Office.Interop.Excel.Application();
                 Workbook workbook = ap.Workbooks.Add();
                 XLWorkbook wb = new XLWorkbook();
-                int num = 1;
+
                 try
                 {
-                    double eachpercent = 90 / Result.Tables.Count;
-                    foreach (System.Data.DataTable dataTable in Result.Tables)
+                    double eachpercent = 80 / Result.Tables.Count;
+                    //foreach (System.Data.DataTable dataTable in Result.Tables)
+                    //{
+                    //    wb.Worksheets.Add(dataTable, txt_WorkSheetName.Text + 1);
+                    //    wb.Worksheet(1).Columns().AdjustToContents();  // Adjust column width
+                    //    wb.Worksheet(1).Rows().AdjustToContents();     // Adjust row heights
+
+                    //    wb.SaveAs(filepath + Path.GetFileNameWithoutExtension(filename) + num + Path.GetExtension(filename));
+                    //    wb.Dispose();
+                    //    wb = new XLWorkbook();
+
+
+                    //    pgb_Loading.Invoke(new Action(delegate ()
+                    //    {
+                    //        pgb_Loading.Value += Convert.ToInt32(eachpercent);
+                    //    }));
+                    //    num++;
+                    //}
+                    
+
+                    while (Result.Tables.Count >= 1)
                     {
-                        wb.Worksheets.Add(dataTable, txt_WorkSheetName.Text + num);
-                        wb.Worksheet(num).Columns().AdjustToContents();  // Adjust column width
-                        wb.Worksheet(num).Rows().AdjustToContents();     // Adjust row heights
-                        Result.Tables.RemoveAt(num);
+                        wb.Worksheets.Add(Result.Tables[0], txt_WorkSheetName.Text + 1);
+                        wb.Worksheet(1).Columns().AdjustToContents();  // Adjust column width
+                        wb.Worksheet(1).Rows().AdjustToContents();     // Adjust row heights
+
+                        wb.SaveAs(filepath +"\\" + Path.GetFileNameWithoutExtension(filename) + num + Path.GetExtension(filename));
+
+                        wb.Dispose();
+
+                        wb = new XLWorkbook();
+                        Result.Tables[0].Dispose();
+                        Result.Tables.RemoveAt(0);
+
                         pgb_Loading.Invoke(new Action(delegate ()
                         {
                             pgb_Loading.Value += Convert.ToInt32(eachpercent);
                         }));
                         num++;
-                    }
-                    wb.SaveAs(filename+num);
-                    Result = new DataSet();
+                        workbook.Close();
 
+                        ap = new Microsoft.Office.Interop.Excel.Application();
+                        workbook = ap.Workbooks.Add();
+                    }
+                    //wb.SaveAs(filename+num);
+                    Result.Dispose();
+                    Result = new DataSet();
+                    workbook.Close();
+                    pgb_Loading.Invoke(new Action(delegate ()
+                    {
+                        pgb_Loading.Value = 100;
+                    }));
                     txt_Result.Invoke(new Action(delegate ()
                     {
                         txt_Result.Text = string.Format("저장이 완료되었습니다. \r\n경로 : {0}", filename);
@@ -367,15 +415,17 @@ namespace QueryToExcel
                 }
                 catch (Exception ex)
                 {
+                    wb = new XLWorkbook();
+
                     lbl_Status.Invoke(new Action(delegate ()
                     {
                         lbl_Status.Text = "Error!";
                     }));
-
                     txt_Result.Invoke(new Action(delegate ()
                     {
                         txt_Result.Text = ex.Message;
                     }));
+                    
                 }
             });
         }
