@@ -55,7 +55,7 @@ namespace QueryToExcel
             // 
             // btn_Excute
             // 
-            this.btn_Excute.Location = new System.Drawing.Point(459, 224);
+            this.btn_Excute.Location = new System.Drawing.Point(459, 225);
             this.btn_Excute.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btn_Excute.Name = "btn_Excute";
             this.btn_Excute.Size = new System.Drawing.Size(119, 40);
@@ -66,7 +66,7 @@ namespace QueryToExcel
             // 
             // btn_Save
             // 
-            this.btn_Save.Location = new System.Drawing.Point(459, 265);
+            this.btn_Save.Location = new System.Drawing.Point(459, 267);
             this.btn_Save.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btn_Save.Name = "btn_Save";
             this.btn_Save.Size = new System.Drawing.Size(119, 40);
@@ -140,7 +140,7 @@ namespace QueryToExcel
             this.tableLayoutPanel1.Controls.Add(this.lbl_Status, 0, 6);
             this.tableLayoutPanel1.Controls.Add(this.panel1, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.panel2, 0, 3);
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(459, 7);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(459, 8);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 7;
@@ -235,17 +235,17 @@ namespace QueryToExcel
             // 
             // btn_QuerySave
             // 
-            this.btn_QuerySave.Location = new System.Drawing.Point(265, 5);
+            this.btn_QuerySave.Location = new System.Drawing.Point(263, 5);
             this.btn_QuerySave.Name = "btn_QuerySave";
-            this.btn_QuerySave.Size = new System.Drawing.Size(124, 23);
+            this.btn_QuerySave.Size = new System.Drawing.Size(126, 23);
             this.btn_QuerySave.TabIndex = 2;
-            this.btn_QuerySave.Text = "쿼리문 저장(Shi+S)";
+            this.btn_QuerySave.Text = "쿼리문 저장(Shift+S)";
             this.btn_QuerySave.UseVisualStyleBackColor = true;
             this.btn_QuerySave.Click += new System.EventHandler(this.btn_QuerySave_Click);
             // 
             // btn_OpenQuery
             // 
-            this.btn_OpenQuery.Location = new System.Drawing.Point(162, 5);
+            this.btn_OpenQuery.Location = new System.Drawing.Point(160, 5);
             this.btn_OpenQuery.Name = "btn_OpenQuery";
             this.btn_OpenQuery.Size = new System.Drawing.Size(97, 23);
             this.btn_OpenQuery.TabIndex = 1;
