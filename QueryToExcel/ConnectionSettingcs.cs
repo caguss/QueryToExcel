@@ -21,7 +21,7 @@ namespace QueryToExcel
             switch (SQL)
             {
                 case "MYSQL":
-                    ConnectionString = string.Format("Server={0};Port={1};Database={2};Uid={3};Pwd={4};SslMode=None;", ser, port, db, name, pw);
+                    ConnectionString = string.Format("Server={0};Port={1};Database={2};Uid={3};Pwd={4};SslMode=None;Connect Timeout=100", ser, port, db, name, pw);
                     break;
                 case "MSSQL":
                     ConnectionString = string.Format("Server={0},{1};Database={2};User Id={3};Password={4};", ser, port, db, name, pw);

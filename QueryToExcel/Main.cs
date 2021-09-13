@@ -230,7 +230,11 @@ namespace QueryToExcel
                             txt_Result.Text = "쿼리 시도중..";
 
                         }));
-                        MySqlDataAdapter adpt = new MySqlDataAdapter(txt_Query.Text, conn);
+                        MySqlCommand cmd = new MySqlCommand();
+                        cmd.CommandTimeout = 86400;
+                        cmd.CommandText = txt_Query.Text;
+                        cmd.Connection = conn;
+                        MySqlDataAdapter adpt = new MySqlDataAdapter(cmd);
                         adpt.Fill(Result);
                         adpt.Dispose();
                     }
@@ -361,7 +365,7 @@ namespace QueryToExcel
 
                     while (Result.Tables.Count >= 1)
                     {
-                        wb.Worksheets.Add(Result.Tables[0], txt_WorkSheetName.Text + 1);
+                        wb.Worksheets.Add(Result.Tables[0]);
                         wb.Worksheet(1).Columns().AdjustToContents();  // Adjust column width
                         wb.Worksheet(1).Rows().AdjustToContents();     // Adjust row heights
 
