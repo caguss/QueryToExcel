@@ -106,5 +106,17 @@ namespace QueryToExcel {
                 this["SQL"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool SaveIntergration {
+            get {
+                return ((bool)(this["SaveIntergration"]));
+            }
+            set {
+                this["SaveIntergration"] = value;
+            }
+        }
     }
 }

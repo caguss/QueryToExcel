@@ -23,5 +23,8 @@
     <Setting Name="SQL" Type="System.String" Scope="User">
       <Value Profile="(Default)">MYSQL</Value>
     </Setting>
+    <Setting Name="SaveIntergration" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

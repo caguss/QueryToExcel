@@ -27,12 +27,11 @@ namespace QueryToExcel
         public Main()
         {
             InitializeComponent();
-
             //접속정보 Load
             Connection.MakeConnection();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void Form_Load(object sender, EventArgs e)
         {
             //접속 정보 Form에 보여줌
             lbl_Server.Text = Connection.Server;
@@ -60,6 +59,7 @@ namespace QueryToExcel
             MessageBox.Show(Notice);//Works :)
             e.Cancel = true;
         }
+
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             switch (keyData)
@@ -120,7 +120,7 @@ namespace QueryToExcel
             btn_Excute.Enabled = true;
             btn_Save.Enabled = true;
         }
-
+        #region Connection 분기
         private async Task MSSQLQuerying()
         {
             await Task.Run(() =>
@@ -158,17 +158,7 @@ namespace QueryToExcel
                             pgb_Loading.Value += Convert.ToInt32(eachpercent);
                         }));
                     }
-                    //if (Result.Tables.Count != 0)
-                    //{
-                    //    DataTable example = new DataTable();
-                    //    var dr = Result.Tables[0].NewRow();
-                    //    dr.ItemArray = Result.Tables[0].Rows[0].ItemArray.Clone() as object[];
-                    //    example.Rows.Add(dr);
-                    //    dgv_Result.Invoke(new Action(delegate ()
-                    //    {
-                    //        dgv_Result.DataSource = example;
-                    //    }));
-                    //}
+      
                     lbl_RowCount.Invoke(new Action(delegate ()
                     {
                         lbl_RowCount.Text = totalRowCount.ToString();
@@ -202,10 +192,6 @@ namespace QueryToExcel
                 }
 
             });
-            //dgv_Result.AutoGenerateColumns = true;
-            //// Resize the DataGridView columns to fit the newly loaded content.
-            //dgv_Result.AutoResizeColumns(
-            //    DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
         }
         private async Task MYSQLQuerying()
         {
@@ -281,18 +267,9 @@ namespace QueryToExcel
                     }));
                 }
             });
-            //if (Result.Tables.Count != 0)
-            //{
-            //    DataTable example = new DataTable();
-            //    example.ImportRow(Result.Tables[0].Rows[0]);
-            //    dgv_Result = new DataGridView();
-            //    dgv_Result.DataSource = example;
-            //}
-            //dgv_Result.AutoGenerateColumns = true;
-            //// Resize the DataGridView columns to fit the newly loaded content.
-            //dgv_Result.AutoResizeColumns(
-            //    DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader);
         }
+
+        #endregion
 
         private async void btn_Save_Click(object sender, EventArgs e)
         {
@@ -344,53 +321,75 @@ namespace QueryToExcel
                 try
                 {
                     double eachpercent = 80 / Result.Tables.Count;
-                    //foreach (System.Data.DataTable dataTable in Result.Tables)
-                    //{
-                    //    wb.Worksheets.Add(dataTable, txt_WorkSheetName.Text + 1);
-                    //    wb.Worksheet(1).Columns().AdjustToContents();  // Adjust column width
-                    //    wb.Worksheet(1).Rows().AdjustToContents();     // Adjust row heights
 
-                    //    wb.SaveAs(filepath + Path.GetFileNameWithoutExtension(filename) + num + Path.GetExtension(filename));
-                    //    wb.Dispose();
-                    //    wb = new XLWorkbook();
-
-
-                    //    pgb_Loading.Invoke(new Action(delegate ()
-                    //    {
-                    //        pgb_Loading.Value += Convert.ToInt32(eachpercent);
-                    //    }));
-                    //    num++;
-                    //}
-                    
-
-                    while (Result.Tables.Count >= 1)
+                    //통합 파일인 경우
+                    if (Connection.SaveIntergration)
                     {
-                        wb.Worksheets.Add(Result.Tables[0]);
-                        wb.Worksheet(1).Columns().AdjustToContents();  // Adjust column width
-                        wb.Worksheet(1).Rows().AdjustToContents();     // Adjust row heights
-
-                        wb.SaveAs(filepath +"\\" + Path.GetFileNameWithoutExtension(filename) + num + Path.GetExtension(filename));
-
-                        wb.Dispose();
-
-                        wb = new XLWorkbook();
-                        Result.Tables[0].Dispose();
-                        Result.Tables.RemoveAt(0);
-
-                        pgb_Loading.Invoke(new Action(delegate ()
+                        #region 통합 파일
+                        while (Result.Tables.Count >= 1)
                         {
-                            pgb_Loading.Value += Convert.ToInt32(eachpercent);
-                        }));
-                        num++;
-                        workbook.Close();
+                            wb.Worksheets.Add(Result.Tables[0], Path.GetFileNameWithoutExtension(filename) + num.ToString());
+                            wb.Worksheet(num).Columns().AdjustToContents();  // Adjust column width
+                            wb.Worksheet(num).Rows().AdjustToContents();     // Adjust row heights
 
-                        ap = new Microsoft.Office.Interop.Excel.Application();
-                        workbook = ap.Workbooks.Add();
+                            pgb_Loading.Invoke(new Action(delegate ()
+                            {
+                                pgb_Loading.Value += Convert.ToInt32(eachpercent);
+                            }));
+                            num++;
+                            Result.Tables[0].Dispose();
+                            Result.Tables.RemoveAt(0);
+                        }
+                        //foreach (System.Data.DataTable dataTable in Result.Tables)
+                        //{
+                        //    wb.Worksheets.Add(dataTable, Path.GetFileNameWithoutExtension(filename) + num.ToString());
+                        //    wb.Worksheet(num).Columns().AdjustToContents();  // Adjust column width
+                        //    wb.Worksheet(num).Rows().AdjustToContents();     // Adjust row heights
+
+                        //    pgb_Loading.Invoke(new Action(delegate ()
+                        //    {
+                        //        pgb_Loading.Value += Convert.ToInt32(eachpercent);
+                        //    }));
+                        //    num++;
+                        //}
+                        wb.SaveAs(filename);
+
+                        #endregion
                     }
-                    //wb.SaveAs(filename+num);
+                    else
+                    {
+                        #region 개별 파일
+                        while (Result.Tables.Count >= 1)
+                        {
+                            wb.Worksheets.Add(Result.Tables[0]);
+                            wb.Worksheet(1).Columns().AdjustToContents();  // Adjust column width
+                            wb.Worksheet(1).Rows().AdjustToContents();     // Adjust row heights
+
+                            wb.SaveAs(filepath + "\\" + Path.GetFileNameWithoutExtension(filename) + num + Path.GetExtension(filename));
+
+                            wb.Dispose();
+
+                            wb = new XLWorkbook();
+                            Result.Tables[0].Dispose();
+                            Result.Tables.RemoveAt(0);
+
+                            pgb_Loading.Invoke(new Action(delegate ()
+                            {
+                                pgb_Loading.Value += Convert.ToInt32(eachpercent);
+                            }));
+                            num++;
+                            workbook.Close();
+
+                            workbook = ap.Workbooks.Add();
+                        }
+                        #endregion
+                    }
+
                     Result.Dispose();
                     Result = new DataSet();
                     workbook.Close();
+                    ap.Quit();
+
                     pgb_Loading.Invoke(new Action(delegate ()
                     {
                         pgb_Loading.Value = 100;
@@ -447,7 +446,7 @@ namespace QueryToExcel
             }
 
         }
-
+        #region 쿼리 저장,열기
         private void btn_QuerySave_Click(object sender, EventArgs e)
         {
             btn_QuerySave.Enabled = false;
@@ -515,5 +514,6 @@ namespace QueryToExcel
             lbl_Status.Text = "Finished!";
             btn_OpenQuery.Enabled = true;
         }
+        #endregion
     }
 }

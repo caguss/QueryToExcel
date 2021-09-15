@@ -15,6 +15,7 @@ namespace QueryToExcel
         public string Database { get; set; }
         public string SQL { get; set; }
         public string ConnectionString { get; set; }
+        public bool SaveIntergration { get; set; }
 
         public void MakeConnection(string ser, string port, string name, string pw, string db, string SQL)
         {
@@ -36,6 +37,7 @@ namespace QueryToExcel
             UserName = Settings.Default.Uid;
             SQL = Settings.Default.SQL;
             UserPW = Settings.Default.Password;
+            SaveIntergration = Settings.Default.SaveIntergration;
 
             switch (SQL)
             {

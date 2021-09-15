@@ -35,7 +35,10 @@ namespace QueryToExcel
                     rb_MSSQL.Checked = true;
                     break;
             }
-
+            if (Settings.Default.SaveIntergration)
+                rb_Intergration.Checked = true;
+            else
+                rb_Individual.Checked = true;
         }
 
         private void btn_Save_Click(object sender, EventArgs e)
@@ -46,6 +49,12 @@ namespace QueryToExcel
             FinishedConn.UserPW = txt_PW.Text;
             FinishedConn.Port = txt_Port.Text;
             FinishedConn.SQL = SQLKind;
+            if (rb_Intergration.Checked)
+                FinishedConn.SaveIntergration = true;
+            else
+                FinishedConn.SaveIntergration = false;
+
+
 
             FinishedConn.MakeConnection(txt_Server.Text, txt_Port.Text, txt_Uid.Text, txt_PW.Text, txt_Database.Text, SQLKind);
 
@@ -55,6 +64,11 @@ namespace QueryToExcel
             Settings.Default.SQL = SQLKind;
             Settings.Default.Password = txt_PW.Text;
             Settings.Default.Port = txt_Port.Text;
+            if (rb_Intergration.Checked)
+                Settings.Default.SaveIntergration = true;
+            else
+                Settings.Default.SaveIntergration = false;
+
             Settings.Default.Save();
 
             this.DialogResult = DialogResult.OK;

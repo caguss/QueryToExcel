@@ -282,7 +282,7 @@ namespace QueryToExcel
             this.MinimizeBox = false;
             this.Name = "Main";
             this.Text = "QueryToExcel";
-            this.Load += new System.EventHandler(this.Form1_Load);
+            this.Load += new System.EventHandler(this.Form_Load);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.panel1.ResumeLayout(false);
