@@ -303,13 +303,8 @@ namespace QueryToExcel
 
         private async Task Saving(string filename)
         {
-            string filepath = Path.GetDirectoryName(filename) + @"\\ExcelToQuery";
-            if (File.Exists(filepath) == false)
-            {
-                DirectoryInfo di = new DirectoryInfo(filepath);
-                di.Create();
-            }
-            ;
+            
+            
             await Task.Run(() =>
             {
                
@@ -340,6 +335,9 @@ namespace QueryToExcel
                             Result.Tables[0].Dispose();
                             Result.Tables.RemoveAt(0);
                         }
+                        wb.SaveAs(filename);
+
+                        //메모리 최적화를 위한 반복 로직 변경
                         //foreach (System.Data.DataTable dataTable in Result.Tables)
                         //{
                         //    wb.Worksheets.Add(dataTable, Path.GetFileNameWithoutExtension(filename) + num.ToString());
@@ -352,12 +350,19 @@ namespace QueryToExcel
                         //    }));
                         //    num++;
                         //}
-                        wb.SaveAs(filename);
-
                         #endregion
                     }
                     else
                     {
+
+                        string filepath = Path.GetDirectoryName(filename) + @"\\ExcelToQuery";
+                        if (File.Exists(filepath) == false)
+                        {
+                            DirectoryInfo di = new DirectoryInfo(filepath);
+                            di.Create();
+                        }
+
+
                         #region 개별 파일
                         while (Result.Tables.Count >= 1)
                         {
