@@ -499,7 +499,7 @@ namespace QueryToExcel
             {
                 try
                 {
-                    var sr = new StreamReader(openFile.FileName);
+                    var sr = new StreamReader(openFile.FileName,Encoding.Default);
                     txt_Query.Text = sr.ReadToEnd();
                     txt_Result.Text = string.Format("쿼리 열기가 완료되었습니다. \r\n경로 : {0}", openFile.FileName);
                     lbl_Status.Text = "Finished!";
