@@ -158,7 +158,7 @@ namespace QueryToExcel
                             pgb_Loading.Value += Convert.ToInt32(eachpercent);
                         }));
                     }
-      
+
                     lbl_RowCount.Invoke(new Action(delegate ()
                     {
                         lbl_RowCount.Text = totalRowCount.ToString();
@@ -279,6 +279,8 @@ namespace QueryToExcel
             if (Convert.ToInt32(lbl_RowCount.Text) <= 0)
             {
                 txt_Result.Text = "쿼리를 먼저 실행하세요.";
+                btn_Save.Enabled = true;
+                btn_Excute.Enabled = true;
                 return;
             }
             txt_Result.Text = "잠시만 기다려주세요..";
@@ -287,8 +289,10 @@ namespace QueryToExcel
 
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             saveFileDialog.Title = "경로 설정";
-            saveFileDialog.DefaultExt = "xlsx";
-            saveFileDialog.Filter = "xlsx 파일|*.xlsx|xls 파일|*.xls";
+            saveFileDialog.DefaultExt = "csv";
+            saveFileDialog.Filter = "csv 파일|*.csv|xlsx 파일|*.xlsx|xls 파일|*.xls";
+            //saveFileDialog.DefaultExt = "csv";
+            //saveFileDialog.Filter = "csv 파일|*.csv";
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
                 pgb_Loading.Invoke(new Action(delegate ()
@@ -297,147 +301,278 @@ namespace QueryToExcel
                 }));
                 await Saving(saveFileDialog.FileName);
             }
-            btn_Save.Enabled = true;
-            btn_Excute.Enabled = true;
+            
         }
 
         private async Task Saving(string filename)
         {
-            
-            
+
+
             await Task.Run(() =>
             {
-               
-                int num = 1;
-                Microsoft.Office.Interop.Excel.Application ap = new Microsoft.Office.Interop.Excel.Application();
-                Workbook workbook = ap.Workbooks.Add();
-                XLWorkbook wb = new XLWorkbook();
 
-                try
+                //string filepath = Path.GetDirectoryName(filename) + @"\\ExcelToQuery";
+                //if (File.Exists(filepath) == false)
+                //{
+                //    DirectoryInfo di = new DirectoryInfo(filepath);
+                //    di.Create();
+                //}
+
+                //통합 파일인 경우
+                if (Connection.SaveIntergration)
                 {
-                    double eachpercent = 80 / Result.Tables.Count;
-
-                    //통합 파일인 경우
-                    if (Connection.SaveIntergration)
+                    //저장 방식에 따른 save method 분기
+                    switch (filename.Split('.')[filename.Split('.').Count() - 1])
                     {
-                        #region 통합 파일
-                        while (Result.Tables.Count >= 1)
-                        {
-                            wb.Worksheets.Add(Result.Tables[0], Path.GetFileNameWithoutExtension(filename) + num.ToString());
-                            wb.Worksheet(num).Columns().AdjustToContents();  // Adjust column width
-                            wb.Worksheet(num).Rows().AdjustToContents();     // Adjust row heights
-
+                        case "xlsx":
+                        case "xls":
+                            XlsxSave_OneFile(filename);
+                            break;
+                        case "csv":
+                            //csv는 통합 파일을 지원하지 않습니다. xlsx 파일으로 저장하시거나, 개별파일로 생성해 주세요.
+                            MessageBox.Show("csv는 통합 파일을 지원하지 않습니다. xlsx 파일으로 저장하시거나, 개별파일로 생성해 주세요.");
+                            txt_Result.Invoke(new Action(delegate ()
+                            {
+                                txt_Result.Text = "csv는 통합 파일을 지원하지 않습니다. xlsx 파일으로 저장하시거나, 개별파일로 생성해 주세요.";
+                            }));
+                            lbl_Status.Invoke(new Action(delegate ()
+                            {
+                                lbl_Status.Text = "Error!";
+                            }));
+                            btn_Save.Invoke(new Action(delegate ()
+                            {
+                                btn_Save.Enabled = true;
+                            }));
+                            btn_Excute.Invoke(new Action(delegate ()
+                            {
+                                btn_Excute.Enabled = true;
+                            }));
                             pgb_Loading.Invoke(new Action(delegate ()
                             {
-                                pgb_Loading.Value += Convert.ToInt32(eachpercent);
+                                pgb_Loading.Value = 0;
                             }));
-                            num++;
-                            Result.Tables[0].Dispose();
-                            Result.Tables.RemoveAt(0);
-                        }
-                        wb.SaveAs(filename);
-
-                        //메모리 최적화를 위한 반복 로직 변경
-                        //foreach (System.Data.DataTable dataTable in Result.Tables)
-                        //{
-                        //    wb.Worksheets.Add(dataTable, Path.GetFileNameWithoutExtension(filename) + num.ToString());
-                        //    wb.Worksheet(num).Columns().AdjustToContents();  // Adjust column width
-                        //    wb.Worksheet(num).Rows().AdjustToContents();     // Adjust row heights
-
-                        //    pgb_Loading.Invoke(new Action(delegate ()
-                        //    {
-                        //        pgb_Loading.Value += Convert.ToInt32(eachpercent);
-                        //    }));
-                        //    num++;
-                        //}
-                        #endregion
+                            return;
+                        default:
+                            break;
                     }
-                    else
-                    {
-
-                        string filepath = Path.GetDirectoryName(filename) + @"\\ExcelToQuery";
-                        if (File.Exists(filepath) == false)
-                        {
-                            DirectoryInfo di = new DirectoryInfo(filepath);
-                            di.Create();
-                        }
-
-
-                        #region 개별 파일
-                        while (Result.Tables.Count >= 1)
-                        {
-                            wb.Worksheets.Add(Result.Tables[0]);
-                            wb.Worksheet(1).Columns().AdjustToContents();  // Adjust column width
-                            wb.Worksheet(1).Rows().AdjustToContents();     // Adjust row heights
-
-                            wb.SaveAs(filepath + "\\" + Path.GetFileNameWithoutExtension(filename) + num + Path.GetExtension(filename));
-
-                            wb.Dispose();
-
-                            wb = new XLWorkbook();
-                            Result.Tables[0].Dispose();
-                            Result.Tables.RemoveAt(0);
-
-                            pgb_Loading.Invoke(new Action(delegate ()
-                            {
-                                pgb_Loading.Value += Convert.ToInt32(eachpercent);
-                            }));
-                            num++;
-                            workbook.Close();
-
-                            workbook = ap.Workbooks.Add();
-                        }
-                        #endregion
-                    }
-
-                    Result.Dispose();
-                    Result = new DataSet();
-                    workbook.Close();
-                    ap.Quit();
-
-                    pgb_Loading.Invoke(new Action(delegate ()
-                    {
-                        pgb_Loading.Value = 100;
-                    }));
-                    txt_Result.Invoke(new Action(delegate ()
-                    {
-                        txt_Result.Text = string.Format("저장이 완료되었습니다. \r\n경로 : {0}", filename);
-                    }));
-                    lbl_Status.Invoke(new Action(delegate ()
-                    {
-                        lbl_Status.Text = "Finished!";
-                    }));
-                    lbl_RowCount.Invoke(new Action(delegate ()
-                    {
-                        lbl_RowCount.Text = "0";
-                    }));
-                    btn_Save.Invoke(new Action(delegate ()
-                    {
-                        btn_Save.Enabled = true;
-                    }));
-                    pgb_Loading.Invoke(new Action(delegate ()
-                    {
-                        pgb_Loading.Value = 100;
-                    }));
-
                 }
-                catch (Exception ex)
+                else
                 {
-                    wb = new XLWorkbook();
+                    //저장 방식에 따른 save method 분기
+                    switch (filename.Split('.')[filename.Split('.').Count() - 1])
+                    {
+                        case "xlsx":
+                        case "xls":
+                            XlsxSave_EachFile(filename);
+                            break;
+                        case "csv":
+                            CsvSave_EachFile(filename);
+                            break;
+                        default:
+                            break;
+                    }
 
-                    lbl_Status.Invoke(new Action(delegate ()
-                    {
-                        lbl_Status.Text = "Error!";
-                    }));
-                    txt_Result.Invoke(new Action(delegate ()
-                    {
-                        txt_Result.Text = ex.Message;
-                    }));
-                    
                 }
+
+                Result.Dispose();
+                Result = new DataSet();
+
+                pgb_Loading.Invoke(new Action(delegate ()
+                {
+                    pgb_Loading.Value = 100;
+                }));
+                txt_Result.Invoke(new Action(delegate ()
+                {
+                    txt_Result.Text = string.Format("저장이 완료되었습니다. \r\n경로 : {0}", filename);
+                }));
+                lbl_Status.Invoke(new Action(delegate ()
+                {
+                    lbl_Status.Text = "Finished!";
+                }));
+                lbl_RowCount.Invoke(new Action(delegate ()
+                {
+                    lbl_RowCount.Text = "0";
+                }));
+                btn_Save.Invoke(new Action(delegate ()
+                {
+                    btn_Save.Enabled = true;
+                }));
+                btn_Excute.Invoke(new Action(delegate ()
+                {
+                    btn_Excute.Enabled = true;
+                }));
+                pgb_Loading.Invoke(new Action(delegate ()
+                {
+                    pgb_Loading.Value = 100;
+                }));
             });
         }
 
+        private void CsvSave_EachFile(string filename)
+        {
+            string filepath = Path.GetDirectoryName(filename) + @"\\ExcelToQuery";
+            if (File.Exists(filepath) == false)
+            {
+                DirectoryInfo di = new DirectoryInfo(filepath);
+                di.Create();
+            }
+
+
+            int num = 1;
+
+            double eachpercent = 80 / Result.Tables.Count;
+
+            #region 개별 파일 // csv 형태
+            while (Result.Tables.Count >= 1)
+            {
+                Microsoft.Office.Interop.Excel.Application xls = new ApplicationClass();
+                xls.Visible = false;
+                FileStream fs = new FileStream(filepath + "\\" + Path.GetFileNameWithoutExtension(filename) + num.ToString() + Path.GetExtension(filename), FileMode.Create, FileAccess.Write);
+                StreamWriter sw = new StreamWriter(fs, Encoding.UTF8);
+                try
+                {
+                    //컬럼 이름들을 ","로 나누고 저장.
+                    string line = string.Join(",", Result.Tables[0].Columns.Cast<object>());
+                    sw.WriteLine(line);
+
+                    //row들을 ","로 나누고 저장.
+                    foreach (DataRow item in Result.Tables[0].Rows)
+                    {
+                        line = string.Join(",", item.ItemArray.Cast<object>());
+                        sw.WriteLine(line);
+                    }
+                    sw.Close();
+                    fs.Close();
+                    pgb_Loading.Invoke(new Action(delegate ()
+                    {
+                        pgb_Loading.Value += Convert.ToInt32(eachpercent);
+                    }));
+                    //csv 파일 생성 끝
+                    xls.Quit();
+                    num++;
+                    Result.Tables[0].Dispose();
+                    Result.Tables.RemoveAt(0);
+                }
+                catch (Exception ex)
+                {
+                    sw.Close();
+                    fs.Close();
+                    xls.Quit();
+                }
+            }
+            #endregion
+        }
+
+        private void XlsxSave_EachFile(string filename)
+        {
+            string filepath = Path.GetDirectoryName(filename) + @"\\ExcelToQuery";
+            if (File.Exists(filepath) == false)
+            {
+                DirectoryInfo di = new DirectoryInfo(filepath);
+                di.Create();
+            }
+
+            int num = 1;
+
+            double eachpercent = 80 / Result.Tables.Count;
+            Microsoft.Office.Interop.Excel.Application ap = new Microsoft.Office.Interop.Excel.Application();
+            Workbook workbook = ap.Workbooks.Add();
+            XLWorkbook wb = new XLWorkbook();
+            try
+            {
+                #region 개별 파일 //엑셀 형태
+                while (Result.Tables.Count >= 1)
+                {
+                    wb.Worksheets.Add(Result.Tables[0]);
+                    wb.Worksheet(1).Columns().AdjustToContents();  // Adjust column width
+                    wb.Worksheet(1).Rows().AdjustToContents();     // Adjust row heights
+
+                    wb.SaveAs(filepath + "\\" + Path.GetFileNameWithoutExtension(filename) + num + Path.GetExtension(filename));
+
+                    wb.Dispose();
+
+                    wb = new XLWorkbook();
+
+                    Result.Tables[0].Dispose();
+                    Result.Tables.RemoveAt(0);
+
+                    pgb_Loading.Invoke(new Action(delegate ()
+                    {
+                        pgb_Loading.Value += Convert.ToInt32(eachpercent);
+                    }));
+                    num++;
+                    workbook.Close();
+
+                    workbook = ap.Workbooks.Add();
+                }
+                #endregion  
+            }
+            catch (Exception ex)
+            {
+                wb = new XLWorkbook();
+
+                lbl_Status.Invoke(new Action(delegate ()
+                {
+                    lbl_Status.Text = "Error!";
+                }));
+                txt_Result.Invoke(new Action(delegate ()
+                {
+                    txt_Result.Text = ex.Message;
+                }));
+
+            }
+
+        }
+
+        private void XlsxSave_OneFile(string filename)
+        {
+            int num = 1;
+
+            double eachpercent = 80 / Result.Tables.Count;
+
+            Microsoft.Office.Interop.Excel.Application ap = new Microsoft.Office.Interop.Excel.Application();
+            Workbook workbook = ap.Workbooks.Add();
+            XLWorkbook wb = new XLWorkbook();
+            try
+            {
+                #region 통합 파일
+                while (Result.Tables.Count >= 1)
+                {
+                    wb.Worksheets.Add(Result.Tables[0], Path.GetFileNameWithoutExtension(filename) + num.ToString());
+                    wb.Worksheet(num).Columns().AdjustToContents();  // Adjust column width
+                    wb.Worksheet(num).Rows().AdjustToContents();     // Adjust row heights
+
+                    pgb_Loading.Invoke(new Action(delegate ()
+                    {
+                        pgb_Loading.Value += Convert.ToInt32(eachpercent);
+                    }));
+                    num++;
+                    Result.Tables[0].Dispose();
+                    Result.Tables.RemoveAt(0);
+
+                }
+                wb.SaveAs(filename);
+
+                workbook.Close();
+                ap.Quit();
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                wb = new XLWorkbook();
+
+                lbl_Status.Invoke(new Action(delegate ()
+                {
+                    lbl_Status.Text = "Error!";
+                }));
+                txt_Result.Invoke(new Action(delegate ()
+                {
+                    txt_Result.Text = ex.Message;
+                }));
+
+            }
+        }
         private void btn_Setting_Click(object sender, EventArgs e)
         {
             Setting setting = new Setting(Connection);
@@ -499,7 +634,7 @@ namespace QueryToExcel
             {
                 try
                 {
-                    var sr = new StreamReader(openFile.FileName,Encoding.Default);
+                    var sr = new StreamReader(openFile.FileName, Encoding.Default);
                     txt_Query.Text = sr.ReadToEnd();
                     txt_Result.Text = string.Format("쿼리 열기가 완료되었습니다. \r\n경로 : {0}", openFile.FileName);
                     lbl_Status.Text = "Finished!";

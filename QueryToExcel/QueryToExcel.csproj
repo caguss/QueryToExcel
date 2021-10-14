@@ -34,10 +34,10 @@
       <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="..\..\..\..\Downloads\SeekPng.com_youtubers-life-logo-png_3770643.png">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.JScript" />
   </ItemGroup>
 
 </Project>
