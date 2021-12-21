@@ -20,6 +20,7 @@ namespace QueryToExcel
 
     public partial class Main : Form
     {
+        bool resultSuccess = true;
 
         ConnectionSetting Connection = new ConnectionSetting();
         private DataSet Result = new DataSet();
@@ -116,7 +117,10 @@ namespace QueryToExcel
                     await MSSQLQuerying();
                     break;
             }
+            if (Result.Tables.Count > 104500)
+            {
 
+            }
             btn_Excute.Enabled = true;
             btn_Save.Enabled = true;
         }
@@ -301,12 +305,16 @@ namespace QueryToExcel
                 }));
                 await Saving(saveFileDialog.FileName);
             }
-            
+            else
+            {
+                btn_Save.Enabled = true;
+                btn_Excute.Enabled = true;
+            }
+
         }
 
         private async Task Saving(string filename)
         {
-
 
             await Task.Run(() =>
             {
@@ -321,12 +329,15 @@ namespace QueryToExcel
                 //통합 파일인 경우
                 if (Connection.SaveIntergration)
                 {
+
                     //저장 방식에 따른 save method 분기
                     switch (filename.Split('.')[filename.Split('.').Count() - 1])
                     {
                         case "xlsx":
                         case "xls":
                             XlsxSave_OneFile(filename);
+
+
                             break;
                         case "csv":
                             //csv는 통합 파일을 지원하지 않습니다. xlsx 파일으로 저장하시거나, 개별파일로 생성해 주세요.
@@ -355,6 +366,9 @@ namespace QueryToExcel
                         default:
                             break;
                     }
+
+
+
                 }
                 else
                 {
@@ -373,26 +387,30 @@ namespace QueryToExcel
                     }
 
                 }
+                if (resultSuccess)
+                {
+                    Result.Dispose();
+                    Result = new DataSet();
 
-                Result.Dispose();
-                Result = new DataSet();
+                    txt_Result.Invoke(new Action(delegate ()
+                    {
+                        txt_Result.Text = string.Format("저장이 완료되었습니다. \r\n경로 : {0}", filename);
+                    }));
+                    lbl_Status.Invoke(new Action(delegate ()
+                    {
+                        lbl_Status.Text = "Finished!";
+                    }));
+                    lbl_RowCount.Invoke(new Action(delegate ()
+                    {
+                        lbl_RowCount.Text = "0";
+                    }));
 
-                pgb_Loading.Invoke(new Action(delegate ()
-                {
-                    pgb_Loading.Value = 100;
-                }));
-                txt_Result.Invoke(new Action(delegate ()
-                {
-                    txt_Result.Text = string.Format("저장이 완료되었습니다. \r\n경로 : {0}", filename);
-                }));
-                lbl_Status.Invoke(new Action(delegate ()
-                {
-                    lbl_Status.Text = "Finished!";
-                }));
-                lbl_RowCount.Invoke(new Action(delegate ()
-                {
-                    lbl_RowCount.Text = "0";
-                }));
+                    pgb_Loading.Invoke(new Action(delegate ()
+                    {
+                        pgb_Loading.Value = 100;
+                    }));
+                }
+
                 btn_Save.Invoke(new Action(delegate ()
                 {
                     btn_Save.Enabled = true;
@@ -401,10 +419,7 @@ namespace QueryToExcel
                 {
                     btn_Excute.Enabled = true;
                 }));
-                pgb_Loading.Invoke(new Action(delegate ()
-                {
-                    pgb_Loading.Value = 100;
-                }));
+
             });
         }
 
@@ -458,6 +473,7 @@ namespace QueryToExcel
                     sw.Close();
                     fs.Close();
                     xls.Quit();
+                    resultSuccess = false;
                 }
             }
             #endregion
@@ -519,12 +535,13 @@ namespace QueryToExcel
                 {
                     txt_Result.Text = ex.Message;
                 }));
+                resultSuccess = false;
 
             }
 
         }
 
-        private void XlsxSave_OneFile(string filename)
+        private bool XlsxSave_OneFile(string filename)
         {
             int num = 1;
 
@@ -555,7 +572,7 @@ namespace QueryToExcel
 
                 workbook.Close();
                 ap.Quit();
-
+                return true;
                 #endregion
             }
             catch (Exception ex)
@@ -570,6 +587,8 @@ namespace QueryToExcel
                 {
                     txt_Result.Text = ex.Message;
                 }));
+                resultSuccess = false;
+                return false;
 
             }
         }
@@ -602,19 +621,23 @@ namespace QueryToExcel
             {
                 try
                 {
-                    File.WriteAllText(saveFile.FileName, txt_Query.Text, Encoding.Default);
-                    txt_Result.Text = string.Format("쿼리 저장이 완료되었습니다. \r\n경로 : {0}", saveFile.FileName);
-                    lbl_Status.Text = "Finished!";
+                    if (resultSuccess)
+                    {
+                        File.WriteAllText(saveFile.FileName, txt_Query.Text, Encoding.Default);
+                        txt_Result.Text = string.Format("쿼리 저장이 완료되었습니다. \r\n경로 : {0}", saveFile.FileName);
+                        lbl_Status.Text = "Finished!";
+                    }
+
                 }
                 catch (Exception ex)
                 {
                     lbl_Status.Text = "Error!";
                     txt_Result.Text = ex.Message;
+                    resultSuccess = false;
                 }
 
             }
 
-            lbl_Status.Text = "Finished!";
             btn_QuerySave.Enabled = true;
 
         }
