@@ -9,18 +9,18 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Office.Interop.Excel;
-using ClosedXML.Excel;
 using System.IO;
 using Action = System.Action;
 using System.Data.SqlClient;
 using DataTable = System.Data.DataTable;
+using ClosedXML.Excel;
 
 namespace QueryToExcel
 {
 
     public partial class Main : Form
     {
-        bool resultSuccess = true;
+        static bool resultSuccess = true;
 
         ConnectionSetting Connection = new ConnectionSetting();
         private DataSet Result = new DataSet();
@@ -335,7 +335,24 @@ namespace QueryToExcel
                     {
                         case "xlsx":
                         case "xls":
-                            XlsxSave_OneFile(filename);
+                            bool countIsSafe = true;
+                            for (int i = 0; i < Result.Tables.Count; i++)
+                            {
+                                if (Result.Tables[i].Rows.Count < 1048576 || Result.Tables[i].Columns.Count < 16384)
+                                {
+                                    countIsSafe = false;
+                                    break;
+                                }
+                                else
+                                {
+                                    MessageBox.Show("xlsx 및 xls 파일은 최대 1,048,576 행, 16,384열까지입니다. 더 크다면 csv 파일로 저장해주세요.");
+                                    resultSuccess = false;
+                                    return;
+                                }
+                            }
+
+                            if (countIsSafe)
+                                XlsxSave_OneFile(filename);
 
 
                             break;
@@ -473,6 +490,15 @@ namespace QueryToExcel
                     sw.Close();
                     fs.Close();
                     xls.Quit();
+
+                    lbl_Status.Invoke(new Action(delegate ()
+                    {
+                        lbl_Status.Text = "Error!";
+                    }));
+                    txt_Result.Invoke(new Action(delegate ()
+                    {
+                        txt_Result.Text = ex.Message;
+                    }));
                     resultSuccess = false;
                 }
             }
@@ -543,41 +569,24 @@ namespace QueryToExcel
 
         private bool XlsxSave_OneFile(string filename)
         {
-            int num = 1;
 
             double eachpercent = 80 / Result.Tables.Count;
 
-            Microsoft.Office.Interop.Excel.Application ap = new Microsoft.Office.Interop.Excel.Application();
-            Workbook workbook = ap.Workbooks.Add();
-            XLWorkbook wb = new XLWorkbook();
+            //Microsoft.Office.Interop.Excel.Application ap = new Microsoft.Office.Interop.Excel.Application();
+            //Workbook workbook = ap.Workbooks.Add();
+            //XLWorkbook wb = new XLWorkbook();
             try
             {
                 #region 통합 파일
-                while (Result.Tables.Count >= 1)
-                {
-                    wb.Worksheets.Add(Result.Tables[0], Path.GetFileNameWithoutExtension(filename) + num.ToString());
-                    wb.Worksheet(num).Columns().AdjustToContents();  // Adjust column width
-                    wb.Worksheet(num).Rows().AdjustToContents();     // Adjust row heights
 
-                    pgb_Loading.Invoke(new Action(delegate ()
-                    {
-                        pgb_Loading.Value += Convert.ToInt32(eachpercent);
-                    }));
-                    num++;
-                    Result.Tables[0].Dispose();
-                    Result.Tables.RemoveAt(0);
+                My_DataTable_Extensions.ExportToExcel(Result.Tables[0], filename);
 
-                }
-                wb.SaveAs(filename);
-
-                workbook.Close();
-                ap.Quit();
                 return true;
                 #endregion
             }
             catch (Exception ex)
             {
-                wb = new XLWorkbook();
+                //wb = new XLWorkbook();
 
                 lbl_Status.Invoke(new Action(delegate ()
                 {
@@ -677,6 +686,67 @@ namespace QueryToExcel
             lbl_Status.Text = "Finished!";
             btn_OpenQuery.Enabled = true;
         }
+
+
         #endregion
+    }
+
+    public static class My_DataTable_Extensions
+    {
+        /// <summary>
+        /// Export DataTable to Excel file
+        /// </summary>
+        /// <param name="DataTable">Source DataTable</param>
+        /// <param name="ExcelFilePath">Path to result file name</param>
+        public static void ExportToExcel(this System.Data.DataTable DataTable, string ExcelFilePath = null)
+        {
+
+                int ColumnsCount;
+
+                if (DataTable == null || (ColumnsCount = DataTable.Columns.Count) == 0)
+                    throw new Exception("ExportToExcel: Null or empty input table!\n");
+
+                // load excel, and create a new workbook
+                Microsoft.Office.Interop.Excel.Application Excel = new Microsoft.Office.Interop.Excel.Application();
+                Excel.Workbooks.Add();
+
+                // single worksheet
+                _Worksheet Worksheet = (_Worksheet)Excel.ActiveSheet;
+
+                object[] Header = new object[ColumnsCount];
+
+                // column headings               
+                for (int i = 0; i < ColumnsCount; i++)
+                    Header[i] = DataTable.Columns[i].ColumnName;
+
+                Microsoft.Office.Interop.Excel.Range HeaderRange = Worksheet.get_Range((Microsoft.Office.Interop.Excel.Range)(Worksheet.Cells[1, 1]), (Microsoft.Office.Interop.Excel.Range)(Worksheet.Cells[1, ColumnsCount]));
+                HeaderRange.Value = Header;
+                HeaderRange.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGray);
+                HeaderRange.Font.Bold = true;
+
+                // DataCells
+                int RowsCount = DataTable.Rows.Count;
+                object[,] Cells = new object[RowsCount, ColumnsCount];
+
+                for (int j = 0; j < RowsCount; j++)
+                    for (int i = 0; i < ColumnsCount; i++)
+                        Cells[j, i] = DataTable.Rows[j][i];
+
+                Worksheet.get_Range((Microsoft.Office.Interop.Excel.Range)(Worksheet.Cells[2, 1]), (Microsoft.Office.Interop.Excel.Range)(Worksheet.Cells[RowsCount + 1, ColumnsCount])).Value = Cells;
+
+                // check fielpath
+                if (ExcelFilePath != null && ExcelFilePath != "")
+                {
+
+                        Worksheet.SaveAs(ExcelFilePath);
+                        Excel.Quit();
+
+                }
+                else    // no filepath is given
+                {
+                    Excel.Visible = true;
+                }
+
+        }
     }
 }
