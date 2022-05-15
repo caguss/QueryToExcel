@@ -3,19 +3,19 @@
   <Profiles />
   <Settings>
     <Setting Name="Server" Type="System.String" Scope="User">
-      <Value Profile="(Default)">m.coever.co.kr</Value>
+      <Value Profile="(Default)"></Value>
     </Setting>
     <Setting Name="Database" Type="System.String" Scope="User">
-      <Value Profile="(Default)">coever_mes_hwt</Value>
+      <Value Profile="(Default)"></Value>
     </Setting>
     <Setting Name="Port" Type="System.String" Scope="User">
-      <Value Profile="(Default)">3306</Value>
+      <Value Profile="(Default)"></Value>
     </Setting>
     <Setting Name="Uid" Type="System.String" Scope="User">
-      <Value Profile="(Default)">dbmes</Value>
+      <Value Profile="(Default)"></Value>
     </Setting>
     <Setting Name="Password" Type="System.String" Scope="User">
-      <Value Profile="(Default)">dbmes1!</Value>
+      <Value Profile="(Default)"></Value>
     </Setting>
     <Setting Name="RecentPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
